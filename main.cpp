@@ -18,11 +18,38 @@ HINSTANCE hInst;                                // 当前实例
 WCHAR szTitle[MAX_LOADSTRING];                  // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
 
+
 // 此代码模块中包含的函数的前向声明:
-ATOM                MyRegisterClass(HINSTANCE hInstance);
+// ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
+//
+//  函数: MyRegisterClass()
+//
+//  目标: 注册窗口类。
+//
+ATOM MyRegisterClass(HINSTANCE hInstance)
+{
+    WNDCLASSEXW wcex;
+
+    wcex.cbSize = sizeof(WNDCLASSEX);
+
+    wcex.style = 0;//CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc = WndProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = hInstance;
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINDOWSPROJECT1));
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_WINDOWSPROJECT1);
+    wcex.lpszClassName = szWindowClass;
+    wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+
+    return RegisterClassExW(&wcex);
+}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow) {
     UNREFERENCED_PARAMETER(hPrevInstance);
@@ -47,11 +74,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     // 主消息循环:
     while (GetMessage(&msg, nullptr, 0, 0))
     {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+        /*
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+        */
     }
 
     return (int) msg.wParam;
@@ -59,31 +90,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 
 
-//
-//  函数: MyRegisterClass()
-//
-//  目标: 注册窗口类。
-//
-ATOM MyRegisterClass(HINSTANCE hInstance)
-{
-    WNDCLASSEXW wcex;
 
-    wcex.cbSize = sizeof(WNDCLASSEX);
-
-    wcex.style = 0;//CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINDOWSPROJECT1));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_WINDOWSPROJECT1);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-
-    return RegisterClassExW(&wcex);
-}
 
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
@@ -154,6 +161,26 @@ void OnPaint(HDC hdc) {
     //::LinearGradientBrush brush(NULL, NULL, Color);
 }
 
+BOOL CALLBACK EnumWindowsProc(_In_ HWND hwnd, _In_ LPARAM Lparam)
+{
+    HWND hDefView = FindWindowEx(hwnd, 0, L"SHELLDLL_DefView", 0);
+    if (hDefView != 0) {
+        // 找它的下一个窗口，类名为WorkerW，隐藏它
+        HWND hWorkerw = FindWindowEx(0, hwnd, L"WorkerW", 0);
+        ShowWindow(hWorkerw, SW_HIDE);
+
+        return FALSE;
+    }
+    return TRUE;
+}
+
+void toDesktop(_In_ HWND hWnd) {
+    HWND hProgman = FindWindow(L"Progman", NULL);  // 找到PM窗口
+    SendMessageTimeout(hProgman, 0x52C, 0, 0, 0, 100, 0);	// 给它发特殊消息
+    SetParent(hWnd, hProgman);
+    EnumWindows(EnumWindowsProc, 0);
+}
+
 //
 //  函数: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
@@ -221,6 +248,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         OutputDebugString(TEXT("窗口创建\n"));
         CreateWindow(TEXT("Button"), TEXT("测试"), WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 300, 200, 120, 60, hWnd, (HMENU)112, hInst, NULL);
         CreateWindow(TEXT("Button"), TEXT("测试1"), WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 380, 330, 120, 60, hWnd, (HMENU)113, hInst, NULL);
+        // toDesktop(hWnd);
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
