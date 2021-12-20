@@ -18,9 +18,9 @@ BOOL belongToExplorer(_In_ HWND hWnd) {
             WCHAR fileFullName[256];
             if (GetProcessImageFileName(hProcess, fileFullName, 256)) {
                 wstring fileFullNameString(fileFullName);
-                int spInd = fileFullNameString.find_last_of('\\', fileFullNameString.length());
-                if (-1 != spInd) {
-                    wstring fileNameString = fileFullNameString.substr(spInd + 1, fileFullNameString.length());
+                string::size_type spInd = fileFullNameString.find_last_of('\\', fileFullNameString.length());
+                if (string::npos != spInd) {
+                    wstring fileNameString = fileFullNameString.substr(((int)spInd) + 1, fileFullNameString.length());
                     transform(fileNameString.begin(), fileNameString.end(), fileNameString.begin(), ::tolower);
                     if (fileNameString == L"explorer.exe") {
                         return TRUE;
