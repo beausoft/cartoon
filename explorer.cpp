@@ -79,11 +79,11 @@ BOOL applyDesktop(_In_ HWND hWnd) {
     if (NULL == hProgman) {
         return FALSE;
     }
+    SendMessageTimeout(hProgman, 0x52C, 0, 0, 0, 100, 0);	// 给它发特殊消息
     HWND hWorkerw = findWorkerW();
     if (NULL == hWorkerw) {
         return FALSE;
     }
-    SendMessageTimeout(hProgman, 0x52C, 0, 0, 0, 100, 0);	// 给它发特殊消息
     SetParent(hWnd, hProgman);      // 设置父窗口
     ShowWindow(hWorkerw, SW_HIDE);  // 隐藏窗口
 	return TRUE;

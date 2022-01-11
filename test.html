@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贝塞尔曲线测试</title>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="450"></canvas>
+    <script>
+        var canvas = document.getElementById("canvas");
+        var width = canvas.width, height = canvas.height;
+        var ctx = canvas.getContext('2d');
+        
+        function Point(x, y) {
+            this.x = x;
+            this.y = y;
+
+            this.sub = function(point) {
+                return new Point(this.x - point.x, this.y - point.y);
+            }
+
+            this.add = function(point) {
+                return new Point(this.x + point.x, this.y + point.y);
+            }
+
+            this.scale = function(num) {
+                return new Point(this.x * num, this.y * num);
+            }
+        }
+
+        function randomColor() {
+            return 'rgb( ' +  ( Math.random() * 255 >> 0 ) + ',' + ( Math.random() * 255 >> 0 ) + ',' + ( Math.random() * 255 >> 0 ) + ' )';
+        }
+
+        // 绘制线段。sp起始点， ep结束点
+        function lineSegment(sp, ep) {
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#696969';
+            ctx.beginPath();
+            ctx.moveTo(sp.x, sp.y);
+            ctx.lineTo(ep.x,ep.y);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(sp.x,sp.y,3,0,2*Math.PI);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(ep.x,ep.y,3,0,2*Math.PI);
+            ctx.stroke();
+        }
+
+
+
+        function secondOrderBezierCurve(t, p0, p1, p2, p3) {
+            // 使用API绘制曲线
+            ctx.strokeStyle = "#1572b5";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(p0.x, p0.y);
+            ctx.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+            ctx.stroke();
+            ctx.closePath();
+            // // 计算目标点
+            // var q0 = p1.sub(p0).scale(t).add(p0);
+            // var q1 = p2.sub(p1).scale(t).add(p1);
+            // var q2 = p3.sub(p2).scale(t).add(p2);
+            // var r0 = q1.sub(q0).scale(t).add(q0);
+            // var r1 = q2.sub(q1).scale(t).add(q1);
+            // var b = r1.sub(r0).scale(t).add(r0);
+            // // 绘制控制点线段
+            // lineSegment(p0, p1);
+            // lineSegment(p1, p2);
+            // lineSegment(p2, p3);
+            
+            // lineSegment(q0, q1);
+            // lineSegment(q1, q2);
+            // lineSegment(r0, r1);
+            // // 使用API绘制当前t所在的曲线
+            // ctx.strokeStyle = "red";
+            // ctx.lineWidth = 2;
+            // ctx.beginPath();
+            // ctx.moveTo(p0.x, p0.y);
+            // ctx.bezierCurveTo(q0.x, q0.y, r0.x, r0.y, b.x, b.y);
+            // ctx.stroke();
+            // ctx.closePath();
+            // // 轨迹球
+            // ctx.beginPath();
+            // ctx.arc(b.x, b.y, 3, 0, 2*Math.PI);
+            // ctx.fillStyle = '#000000';
+            // ctx.fill();
+            // ctx.closePath();
+        }
+
+        function animloop(timestamp) {
+            var t = timestamp % 5000 / 5000;
+            ctx.save();
+            // 清除背景
+            ctx.rect(0,0, width, height);
+            ctx.fillStyle="#ffffff";
+            ctx.fill();
+            // 绘制二阶曲线
+            var p0 = new Point(122, 247);
+            var p1, p2;
+            if(t > 0.95) {
+                var a = (t - 0.95) / 0.05;
+                p1 = new Point((130 - 128) * a + 128, (145 - 66) * a + 66);  // to (130, 145)
+                p2 = new Point((276 - 260) * a + 260, (154 - 95) * a + 95);  // to (276, 154)
+            } else {
+                p1 = new Point(128, 66);  // to (130, 145)
+                p2 = new Point(260, 95);  // to (276, 154)
+            }
+            
+            var p3 = new Point(279, 255);
+            secondOrderBezierCurve(t, p0, p1, p2, p3);
+            var p0 = new Point(279, 255);
+            if(t > 0.95) {
+                var a = (t - 0.95) / 0.05;
+                p1 = new Point((280 - 287) * a + 287, (358 - 357) * a + 357); // to (280, 358)
+                p2 = new Point((122 - 120) * a + 120, (376 - 389) * a + 389); // to (122, 376)
+            } else {
+                p1 = new Point(287, 357); // to (280, 358)
+                p2 = new Point(120, 389); // to (122, 376)
+            }
+            // var p1 = new Point(287, 357); // to (280, 358)
+            // var p2 = new Point(120, 389); // to (122, 376)
+            var p3 = new Point(122, 247);
+            secondOrderBezierCurve(t, p0, p1, p2, p3);
+
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(257, 272, 12, 0, 2*Math.PI)
+            ctx.fill();
+            ctx.closePath();
+
+            // 动画循环
+            ctx.restore();
+            requestAnimationFrame(animloop);
+        }
+        requestAnimationFrame(animloop);
+    </script>
+</body>
+</html>
