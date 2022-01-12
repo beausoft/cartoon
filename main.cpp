@@ -73,11 +73,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     break;
     case WM_CREATE:
     {
+        /*
         if (!applyDesktop(hWnd)) {
             MessageBox(hWnd, L"…Ë÷√±⁄÷Ω¥∞ø⁄ ß∞‹£°", L"¥ÌŒÛ", MB_OK | MB_ICONERROR);
             // CloseWindow(hWnd); 
             DestroyWindow(hWnd);
         }
+        */
     }
     break;
     case WM_PAINT:
@@ -117,7 +119,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-bool flag = false;
 void OnPaint(_In_ HWND hWnd, _In_ HDC hdc) {
     ::Graphics graphics(hdc);
     Pen          pen(Color(255, 0, 0, 255));
@@ -128,15 +129,7 @@ void OnPaint(_In_ HWND hWnd, _In_ HDC hdc) {
     StringFormat stringFormat;
     WCHAR testString[] = L"Hello034°œƒ„∫√";
 
-    Color backFullColor;
-    if (flag) {
-        flag = false;
-        backFullColor = Color(255, 255, 0, 255);
-    }
-    else {
-        flag = true;
-        backFullColor = Color(255, 0, 255, 255);
-    }
+    Color backFullColor(255, 0, 255, 255);
     graphics.Clear(backFullColor);
 
     stringFormat.SetFormatFlags(StringFormatFlagsDirectionVertical);
