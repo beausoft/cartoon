@@ -80,6 +80,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             DestroyWindow(hWnd);
         }
         */
+        SetTimer(hWnd, 1, 17, NULL);
+    }
+    break;
+    case WM_TIMER:
+    {
+        HDC hdc = GetDC(hWnd);
+        OnPaint(hWnd, hdc);
+        ReleaseDC(hWnd, hdc);
     }
     break;
     case WM_PAINT:
@@ -120,7 +128,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 }
 
 void OnPaint(_In_ HWND hWnd, _In_ HDC hdc) {
-    ::Graphics graphics(hdc);
+    // https://blog.csdn.net/weixin_33894640/article/details/94608441 Ë«»º³å
+    RECT rect;
+    GetClientRect(hWnd, &rect);
+    HDC hMemDC = CreateCompatibleDC(hdc);
+    HBITMAP hBitmap = CreateCompatibleBitmap(hdc, rect.right - rect.left, rect.bottom - rect.top);
+    SelectObject(hMemDC, hBitmap);
+
+    ::Graphics graphics(hMemDC);
     Pen          pen(Color(255, 0, 0, 255));
     FontFamily   fontFamily(L"ËÎÌå");
     Font         font(&fontFamily, 12, FontStyleRegular, UnitPixel);
@@ -153,4 +168,7 @@ void OnPaint(_In_ HWND hWnd, _In_ HDC hdc) {
 
     // https://docs.microsoft.com/en-us/previous-versions/visualstudio/foxpro/ms971547(v=vs.80)
     //::LinearGradientBrush brush(NULL, NULL, Color);
+    BitBlt(hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, hMemDC, 0, 0, SRCCOPY);
+    DeleteDC(hMemDC);
+    DeleteObject(hBitmap);
 }
