@@ -5,11 +5,21 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>贝塞尔曲线测试</title>
+    <style>
+        html,body {margin: 0; padding: 0; overflow: hidden;}
+    </style>
 </head>
 <body>
-    <canvas id="canvas" width="800" height="450"></canvas>
+    <canvas id="canvas"></canvas>
     <script>
         var canvas = document.getElementById("canvas");
+        var screenWidth = canvas.width = window.innerWidth;
+        var screenHeight = canvas.height = window.innerHeight;
+        window.onresize = function(event) {
+            screenWidth = canvas.width = window.innerWidth;
+            screenHeight = canvas.height = window.innerHeight;
+        }
+
         var width = canvas.width, height = canvas.height;
         var ctx = canvas.getContext('2d');
         
@@ -29,8 +39,22 @@
                 return new Point(this.x * num, this.y * num);
             }
 
+            this.multi = function(point) {
+                return new Point(this.x * point.x, this.y * point.y);
+            }
+
+            this.div = function(point) {
+                return new Point(this.x / point.x, this.y / point.y);
+            }
+
             this.clone = function() {
                 return new Point(this.x, this.y);
+            }
+
+            this.copy = function(point) {
+                this.x = point.x;
+                this.y = point.y;
+                return this;
             }
         }
 
@@ -48,11 +72,11 @@
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.arc(sp.x,sp.y,3,0,2*Math.PI);
+            ctx.arc(sp.x, sp.y, 3, 0, 2 * Math.PI);
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.arc(ep.x,ep.y,3,0,2*Math.PI);
+            ctx.arc(ep.x, ep.y, 3, 0, 2*Math.PI);
             ctx.stroke();
         }
 
@@ -96,18 +120,20 @@
             ctx.closePath();
         }
 
-        var a_p0 = new Point(122, 247);
-        var a_p1 = new Point(128, 66);  // to (130, 145)
-        var a_p2 = new Point(260, 95);  // to (276, 154)
-        var a_p3 = new Point(279, 255);
+        var ap0 = new Point(2, 181).div(new Point(323, 323));
+        var ap1 = new Point(8, 0).div(new Point(323, 323));
+        var ap2 = new Point(140, 29).div(new Point(323, 323));
+        var ap3 = new Point(159, 189).div(new Point(323, 323));
 
-        var b_p0 = new Point(279, 255);
-        var b_p1 = new Point(287, 357); // to (280, 358)
-        var b_p2 = new Point(120, 389); // to (122, 376)
-        var b_p3 = new Point(122, 247);
+        var bp0 = new Point(159, 189).div(new Point(323, 323));
+        var bp1 = new Point(167, 291).div(new Point(323, 323));
+        var bp2 = new Point(0, 323).div(new Point(323, 323));
+        var bp3 = new Point(2, 181).div(new Point(323, 323));
 
-        var kernel = new Point(257, 272);
+        var kernel = new Point(130, 205).div(new Point(323, 323));
         var isKernel = true;
+
+        var offset = new Point(200, 0);
 
         function Schedule(duration) {
             this.duration = duration;
@@ -167,15 +193,19 @@
 
         function closeEye(alpha) {
             if(this.running) {
-                a_p1.x = (130 - 128) * alpha + 128;
-                a_p1.y = (145 - 66) * alpha + 66;
-                a_p2.x = (276 - 260) * alpha + 260;
-                a_p2.y = (154 - 95) * alpha + 95;
+                var ap1_ = new Point(8, 0).div(new Point(323, 323));
+                var ap1__ = new Point(10, 79).div(new Point(323, 323));
+                var ap2_ = new Point(140, 29).div(new Point(323, 323));
+                var ap2__ = new Point(159, 88).div(new Point(323, 323));
+                var bp1_ = new Point(167, 291).div(new Point(323, 323));
+                var bp1__ = new Point(160, 292).div(new Point(323, 323));
+                var bp2_ = new Point(0, 323).div(new Point(323, 323));
+                var bp2__ = new Point(2, 310).div(new Point(323, 323));
 
-                b_p1.x = (280 - 287) * alpha + 287;
-                b_p1.y = (358 - 357) * alpha + 357;
-                b_p2.x = (122 - 120) * alpha + 120;
-                b_p2.y = (376 - 389) * alpha + 389;
+                ap1.copy(ap1__.sub(ap1_).scale(alpha).add(ap1_));
+                ap2.copy(ap2__.sub(ap2_).scale(alpha).add(ap2_));
+                bp1.copy(bp1__.sub(bp1_).scale(alpha).add(bp1_));
+                bp2.copy(bp2__.sub(bp2_).scale(alpha).add(bp2_));
 
                 if(alpha === 1.0) {
                     isKernel = false;
@@ -185,10 +215,20 @@
 
         function openEye(alpha) {
             if(this.running) {
-                a_p1.x = (128 - 130) * alpha + 130;
-                a_p1.y = (66 - 145) * alpha + 145;
-                a_p2.x = (260 - 276) * alpha + 276;
-                a_p2.y = (95 - 154) * alpha + 154;
+                var ap1_ = new Point(8, 0).div(new Point(323, 323));
+                var ap1__ = new Point(10, 79).div(new Point(323, 323));
+                var ap2_ = new Point(140, 29).div(new Point(323, 323));
+                var ap2__ = new Point(159, 88).div(new Point(323, 323));
+                var bp1_ = new Point(167, 291).div(new Point(323, 323));
+                var bp1__ = new Point(160, 292).div(new Point(323, 323));
+                var bp2_ = new Point(0, 323).div(new Point(323, 323));
+                var bp2__ = new Point(2, 310).div(new Point(323, 323));
+
+                ap1.copy(ap1_.sub(ap1__).scale(alpha).add(ap1__));
+                ap2.copy(ap2_.sub(ap2__).scale(alpha).add(ap2__));
+                bp1.copy(bp1_.sub(bp1__).scale(alpha).add(bp1__));
+                bp2.copy(bp2_.sub(bp2__).scale(alpha).add(bp2__));
+
                 if(alpha === 1.0) {
                     isKernel = true;
                 }
@@ -212,35 +252,35 @@
             var t = timestamp % 5000 / 5000;
             ctx.save();
             // 清除背景
-            ctx.rect(0,0, width, height);
+            ctx.rect(0,0, screenWidth, screenHeight);
             ctx.fillStyle="#ffffff";
             ctx.fill();
             
-            secondOrderBezierCurve(t, a_p0, a_p1, a_p2, a_p3);
-            secondOrderBezierCurve(t, b_p0, b_p1, b_p2, b_p3);
-
-            var offset = new Point(200, 0);
-            var c_a_p0 = new Point(a_p0.x, a_p3.y).add(offset);
-            var c_a_p1 = new Point(a_p1.x, a_p2.y).add(offset);
-            var c_a_p2 = new Point(a_p2.x, a_p1.y).add(offset);
-            var c_a_p3 = new Point(a_p3.x, a_p0.y).add(offset);
-            secondOrderBezierCurve(t, c_a_p0, c_a_p1, c_a_p2, c_a_p3);
-            var c_b_p0 = new Point(b_p0.x, b_p3.y).add(offset);
-            var c_b_p1 = new Point(b_p1.x, b_p2.y).add(offset);
-            var c_b_p2 = new Point(b_p2.x, b_p1.y).add(offset);
-            var c_b_p3 = new Point(b_p3.x, b_p0.y).add(offset);
-            secondOrderBezierCurve(t, c_b_p0, c_b_p1, c_b_p2, c_b_p3);
-
+            var scale = screenHeight * 0.8;
+            var offset = new Point(screenWidth / 2 - ap3.scale(scale).x - screenWidth / 10, (screenHeight - scale) / 2);
+            secondOrderBezierCurve(t, ap0.scale(scale).add(offset), ap1.scale(scale).add(offset), ap2.scale(scale).add(offset), ap3.scale(scale).add(offset));
+            secondOrderBezierCurve(t, bp0.scale(scale).add(offset), bp1.scale(scale).add(offset), bp2.scale(scale).add(offset), bp3.scale(scale).add(offset));
+            var offset1 = new Point(screenWidth / 2 + screenWidth / 10,offset.y);
+            var c_ap0 = new Point(ap0.x, ap3.y).scale(scale).add(offset1);
+            var c_ap1 = new Point(ap1.x, ap2.y).scale(scale).add(offset1);
+            var c_ap2 = new Point(ap2.x, ap1.y).scale(scale).add(offset1);
+            var c_ap3 = new Point(ap3.x, ap0.y).scale(scale).add(offset1);
+            secondOrderBezierCurve(t, c_ap0, c_ap1, c_ap2, c_ap3);
+            var c_bp0 = new Point(bp0.x, bp3.y).scale(scale).add(offset1);
+            var c_bp1 = new Point(bp1.x, bp2.y).scale(scale).add(offset1);
+            var c_bp2 = new Point(bp2.x, bp1.y).scale(scale).add(offset1);
+            var c_bp3 = new Point(bp3.x, bp0.y).scale(scale).add(offset1);
+            secondOrderBezierCurve(t, c_bp0, c_bp1, c_bp2, c_bp3);
             if(isKernel) {
                 ctx.fillStyle = '#000000';
                 ctx.beginPath();
-                ctx.arc(kernel.x, kernel.y, 12, 0, 2*Math.PI)
+                ctx.arc(kernel.x * scale + offset.x, kernel.y * scale + offset.y, 0.05 * scale, 0, 2*Math.PI);
                 ctx.fill();
                 ctx.closePath();
 
                 ctx.fillStyle = '#000000';
                 ctx.beginPath();
-                ctx.arc(a_p3.x - kernel.x + c_b_p3.x, kernel.y, 12, 0, 2*Math.PI)
+                ctx.arc(ap3.scale(scale).add(offset).x - (kernel.x * scale + offset.x) + offset1.x, kernel.y * scale + offset.y, 0.05 * scale, 0, 2*Math.PI);
                 ctx.fill();
                 ctx.closePath();
             }
