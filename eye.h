@@ -1,5 +1,8 @@
 #pragma once
 #include "vector2.h"
+#include <chrono>
+using namespace std;
+using namespace chrono;
 
 #define EYE_AP0 Vector2(2., 181.).Div_(Vector2(323., 323.))
 #define EYE_AP1 Vector2(8., 0.).Div_(Vector2(323., 323.))
@@ -19,7 +22,7 @@
 #define EYE_BP1_TO Vector2(160., 292.).Div_(Vector2(323., 323.))
 #define EYE_BP2_TO Vector2(2., 310.).Div_(Vector2(323., 323.))
 
-typedef void (*AnimationCallback)(long);
+typedef void (*AnimationCallback)(float, bool);
 
 typedef struct tagTrack
 {
@@ -36,12 +39,12 @@ public:
 	void start();
 	void stop();
 	void addTrack(long start, long end, AnimationCallback callback);
+	void update();
 
 private:
 	long mDuration;
-	long mStartTime;
+	system_clock::time_point mStartTime;
 	bool mRunning;
-	LPANIMATION_TRACK mTrack;
+	LPANIMATION_TRACK* mTrack;
 	int mTrackCount;
-	void update();
 };

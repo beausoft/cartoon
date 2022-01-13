@@ -10,8 +10,12 @@ using namespace Gdiplus;
 // 函数的前向声明
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM); // 窗口消息处理
 void OnPaint(_In_ HWND, _In_ HDC);
-void openEye(long alpha);
-void closeEye(long alpha);
+
+AnimationSchedule schedule(3000);  // 调度服务
+Vector2 AP1(EYE_AP1);
+Vector2 AP2(EYE_AP2);
+Vector2 BP1(EYE_BP1);
+Vector2 BP2(EYE_BP2);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow) {
     UNREFERENCED_PARAMETER(hPrevInstance);
@@ -72,12 +76,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     return (int)msg.wParam;
 }
 
-void openEye(long alpha) {
-    
+void openEye(float alpha, bool running) {
+    OutputDebugString(L"openEye\n");
 }
 
-void closeEye(long alpha) {
+void closeEye(float alpha, bool running) {
+    OutputDebugString(L"closeEye\n");
+}
 
+void lastSchedule(float alpha, bool running) {
+    if (!running) {
+        schedule.start();
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -100,32 +110,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         }*/
         SetTimer(hWnd, TIMERID_REDRAW, 17, NULL);
         {
-            ANIMATION_TRACK track1;
-            track1.start = 1000l;
-            track1.end = 2000l;
-            track1.finished = false;
-            track1.callback = openEye;
-
-            LPANIMATION_TRACK track2 = new ANIMATION_TRACK{1000l,2000l, false, closeEye};
-
-            ANIMATION_TRACK a[2] = { track1 , *track2 };
-
-            LPANIMATION_TRACK b = a;
-
-            int c = sizeof(b[2]);
-
-            delete track2;
-
-            MessageBox(hWnd, L"", L"", MB_OK);
-
-
-
+            schedule.addTrack(0, 30, closeEye);
+            schedule.addTrack(100, 130, openEye);
+            schedule.addTrack(200, 230, closeEye);
+            schedule.addTrack(230, 260, openEye);
+            schedule.addTrack(3000, 3000, lastSchedule);
+            schedule.start();
         }
         break;
     case WM_TIMER:
     {
         int eventId = LOWORD(wParam);
         if (eventId == TIMERID_REDRAW) {
+            schedule.update();
             HDC hdc = GetDC(hWnd);
             OnPaint(hWnd, hdc);
             ReleaseDC(hWnd, hdc);
@@ -152,7 +149,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 }
 
 void OnPaint(_In_ HWND hWnd, _In_ HDC hdc) {
-    // https://blog.csdn.net/weixin_33894640/article/details/94608441 双缓冲
+    // 双缓冲 https://blog.csdn.net/weixin_33894640/article/details/94608441
     RECT rect;
     GetClientRect(hWnd, &rect);
     int width = rect.right - rect.left;
@@ -174,12 +171,12 @@ void OnPaint(_In_ HWND hWnd, _In_ HDC hdc) {
 
     float scale = height * 0.8f;
     EYE_AP0.Scale(scale, &lap0);
-    EYE_AP1.Scale(scale, &lap1);
-    EYE_AP2.Scale(scale, &lap2);
+    AP1.Scale(scale, &lap1);
+    AP2.Scale(scale, &lap2);
     EYE_AP3.Scale(scale, &lap3);
     EYE_BP0.Scale(scale, &lbp0);
-    EYE_BP1.Scale(scale, &lbp1);
-    EYE_BP2.Scale(scale, &lbp2);
+    BP1.Scale(scale, &lbp1);
+    BP2.Scale(scale, &lbp2);
     EYE_BP3.Scale(scale, &lbp3);
 
     ::SolidBrush frontBrush(frontColor);
@@ -250,92 +247,6 @@ void OnPaint(_In_ HWND hWnd, _In_ HDC hdc) {
     Vector2 kernalRight(lap3.GetX() - kernalLeft.GetX() + rap0.GetX(), kernalLeft.GetY());
     graphics.FillEllipse(&kernelBrush, kernalRight.GetX() - kernalRadius, kernalRight.GetY() - kernalRadius, kernalRadius * 2, kernalRadius * 2);
 
-    
-
-    /*
-    Vector2 ap0(EYE_AP0);
-    Vector2 ap1(EYE_AP1);
-    Vector2 ap2(EYE_AP2);
-    Vector2 ap3(EYE_AP3);
-    Vector2 bp0(EYE_BP0);
-    Vector2 bp1(EYE_BP1);
-    Vector2 bp2(EYE_BP2);
-    Vector2 bp3(EYE_BP3);
-
-    double scale = height * 0.8;
-    ap0.Scale_(scale);
-    ap1.Scale_(scale);
-    ap2.Scale_(scale);
-    ap3.Scale_(scale);
-    bp0.Scale_(scale);
-    bp1.Scale_(scale);
-    bp2.Scale_(scale);
-    bp3.Scale_(scale);*/
-    
-    
-    /*Vector2 offset(width / 2)* /
-
-
-
-
-    // graphics.DrawBeziers(Pen(Color::Green, 3), )
-
-    /*
-    SolidBrush blackBrush(Color(128, 0, 0, 255));
-    PointF point1(100.0f, 100.0f);
-    PointF point2(200.0f, 50.0f);
-    PointF point3(250.0f, 200.0f);
-    PointF point4(50.0f, 150.0f);
-    PointF points[4] = { point1, point2, point3, point4 };
-
-    //填充闭合区域  
-    graphics.FillClosedCurve(&blackBrush, points, 4);
-    //为闭合区域画边框  
-    Pen curPen(Color::Green, 3);
-    graphics.DrawClosedCurve(&curPen, points, 4);
-    */
-
-    /*
-    Vector2 p1(10., 10.);
-    Vector2 p2(20., 20.);
-    Vector2 v3(p2); // p1.Add(p2, &Vector2());
-
-    double a = v3.Add_(p1).Add_(p2).Scale_(1. / 3. ).Copy_(p1).Add_(p2).Add_(EYE_AP0).GetX();
-
-    ::Graphics graphics(hMemDC);
-    Pen          pen(Color(255, 0, 0, 255));
-    FontFamily   fontFamily(L"宋体");
-    Font         font(&fontFamily, 12, FontStyleRegular, UnitPixel);
-    PointF       pointF1(30.0f, 60.0f), pointF2(230.0f, 60.0f);
-    SolidBrush   solidBrush(Color(255, 0, 0, 255));
-    StringFormat stringFormat;
-    WCHAR testString[] = L"Hello034∠你好";
-
-    Color backFullColor(0, 0, 0, 255);
-    graphics.Clear(backFullColor);
-
-    stringFormat.SetFormatFlags(StringFormatFlagsDirectionVertical);
-
-    graphics.SetSmoothingMode(SmoothingModeDefault);
-    graphics.DrawLine(&pen, 0, 0, 200, 100);
-    graphics.DrawEllipse(&pen, 10, 10, 190, 90);
-    graphics.SetTextRenderingHint(TextRenderingHintSystemDefault);
-    graphics.DrawString(testString, -1, &font, pointF1, &stringFormat, &solidBrush);
-
-
-    graphics.SetSmoothingMode(SmoothingModeHighQuality);
-    graphics.DrawLine(&pen, 200, 0, 400, 100);
-    graphics.DrawEllipse(&pen, 210, 10, 190, 90);
-    graphics.SetTextRenderingHint(TextRenderingHintAntiAlias);
-    graphics.DrawString(testString, -1, &font, pointF2, &stringFormat, &solidBrush);
-
-    //graphics.DrawCurve()
-
-    OutputDebugString(TEXT("渲染\n"));
-
-    // https://docs.microsoft.com/en-us/previous-versions/visualstudio/foxpro/ms971547(v=vs.80)
-    //::LinearGradientBrush brush(NULL, NULL, Color);
-    */
     BitBlt(hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, hMemDC, 0, 0, SRCCOPY);
     DeleteDC(hMemDC);
     DeleteObject(hBitmap);
