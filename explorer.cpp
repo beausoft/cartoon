@@ -82,6 +82,7 @@ BOOL regainDesktop(_In_ HWND hWnd) {
     }
     // SetParent(hWnd, NULL);      // 设置父窗口
     ShowWindow(hWorkerw, SW_SHOW);  // 显示窗口
+    return TRUE;
 }
 
 BOOL applyDesktop(_In_ HWND hWnd) {

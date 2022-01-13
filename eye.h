@@ -18,3 +18,30 @@
 
 #define EYE_BP1_TO Vector2(160., 292.).Div_(Vector2(323., 323.))
 #define EYE_BP2_TO Vector2(2., 310.).Div_(Vector2(323., 323.))
+
+typedef void (*AnimationCallback)(long);
+
+typedef struct tagTrack
+{
+	long start;
+	long end;
+	bool finished;
+	AnimationCallback callback;
+}ANIMATION_TRACK, *LPANIMATION_TRACK;
+
+class AnimationSchedule {
+public:
+	AnimationSchedule(long duration);
+	~AnimationSchedule();
+	void start();
+	void stop();
+	void addTrack(long start, long end, AnimationCallback callback);
+
+private:
+	long mDuration;
+	long mStartTime;
+	bool mRunning;
+	LPANIMATION_TRACK mTrack;
+	int mTrackCount;
+	void update();
+};

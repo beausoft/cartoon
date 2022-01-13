@@ -10,6 +10,8 @@ using namespace Gdiplus;
 // 函数的前向声明
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM); // 窗口消息处理
 void OnPaint(_In_ HWND, _In_ HDC);
+void openEye(long alpha);
+void closeEye(long alpha);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow) {
     UNREFERENCED_PARAMETER(hPrevInstance);
@@ -70,6 +72,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     return (int)msg.wParam;
 }
 
+void openEye(long alpha) {
+    
+}
+
+void closeEye(long alpha) {
+
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
     case WM_COMMAND:
@@ -89,6 +99,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             DestroyWindow(hWnd);
         }*/
         SetTimer(hWnd, TIMERID_REDRAW, 17, NULL);
+        {
+            ANIMATION_TRACK track1;
+            track1.start = 1000l;
+            track1.end = 2000l;
+            track1.finished = false;
+            track1.callback = openEye;
+
+            LPANIMATION_TRACK track2 = new ANIMATION_TRACK{1000l,2000l, false, closeEye};
+
+            ANIMATION_TRACK a[2] = { track1 , *track2 };
+
+            LPANIMATION_TRACK b = a;
+
+            int c = sizeof(b[2]);
+
+            delete track2;
+
+            MessageBox(hWnd, L"", L"", MB_OK);
+
+
+
+        }
         break;
     case WM_TIMER:
     {
@@ -132,9 +164,9 @@ void OnPaint(_In_ HWND hWnd, _In_ HDC hdc) {
     graphics.SetSmoothingMode(::SmoothingMode::SmoothingModeHighQuality);
     graphics.SetInterpolationMode(::InterpolationMode::InterpolationModeBilinear);
 
-    Color backColor(0, 0, 0, 255);
+    Color backColor(255, 0, 0, 0);
     Color frontColor(255, 255, 255, 255);
-    Color kernelColor(0, 0, 0, 255);
+    Color kernelColor(255, 0, 0, 0);
 
     graphics.Clear(backColor);
 
@@ -207,9 +239,17 @@ void OnPaint(_In_ HWND hWnd, _In_ HDC hdc) {
     rightPath.AddBezier(point13, point14, point15, point16);
     graphics.FillPath(&frontBrush, &rightPath);
 
+    float kernalRadius = 0.05f * scale;
 
-    
-    
+    Vector2 kernalLeft;
+    EYE_KERNEL.Scale(scale, &kernalLeft);
+    kernalLeft.Add_(offsetLeft);
+    ::SolidBrush kernelBrush(kernelColor);
+    graphics.FillEllipse(&kernelBrush, kernalLeft.GetX() - kernalRadius, kernalLeft.GetY() - kernalRadius, kernalRadius * 2, kernalRadius * 2);
+ 
+    Vector2 kernalRight(lap3.GetX() - kernalLeft.GetX() + rap0.GetX(), kernalLeft.GetY());
+    graphics.FillEllipse(&kernelBrush, kernalRight.GetX() - kernalRadius, kernalRight.GetY() - kernalRadius, kernalRadius * 2, kernalRadius * 2);
+
     
 
     /*
