@@ -21,6 +21,9 @@
     <ClCompile Include="explorer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="eye.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="global.h">
@@ -30,6 +33,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="explorer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vector2.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="eye.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

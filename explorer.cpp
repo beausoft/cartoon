@@ -74,6 +74,16 @@ HWND findWorkerW() {
     return wi.hWnd;
 }
 
+BOOL regainDesktop(_In_ HWND hWnd) {
+    // TODO 尚未研究出来如何恢复explorer到未发送0x52C事件之前的状态。
+    HWND hWorkerw = findWorkerW();
+    if (NULL == hWorkerw) {
+        return FALSE;
+    }
+    // SetParent(hWnd, NULL);      // 设置父窗口
+    ShowWindow(hWorkerw, SW_SHOW);  // 显示窗口
+}
+
 BOOL applyDesktop(_In_ HWND hWnd) {
     HWND hProgman = findProgman();
     if (NULL == hProgman) {

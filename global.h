@@ -2,6 +2,7 @@
 #include <windows.h>
 
 #define MAX_LOADSTRING 100   // 最长字符串
+#define TIMERID_REDRAW 0x21  // 重绘定时器ID
 
 // 全局变量:
 ULONG_PTR gdiplusToken;	                        // GDI+句柄
