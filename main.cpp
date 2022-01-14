@@ -6,16 +6,19 @@
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
 using namespace Gdiplus;
+#include <cstdlib>
 
 // 函数的前向声明
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM); // 窗口消息处理
 void OnPaint(_In_ HWND, _In_ HDC);
 
-AnimationSchedule schedule(3000);  // 调度服务
+AnimationSchedule schedule(300);  // 调度服务
 Vector2 AP1(EYE_AP1);
 Vector2 AP2(EYE_AP2);
 Vector2 BP1(EYE_BP1);
 Vector2 BP2(EYE_BP2);
+BOOL isKernel = TRUE;
+HWND hWndMain = NULL;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow) {
     UNREFERENCED_PARAMETER(hPrevInstance);
@@ -42,12 +45,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
         return FALSE;
     }
 
+    int cw = 0, ch = 0;
+    {
+        // https://blog.csdn.net/yp18792574062/article/details/88351342
+        HDC hdc = GetDC(NULL);
+        cw = GetDeviceCaps(hdc, DESKTOPHORZRES);
+        ch = GetDeviceCaps(hdc, DESKTOPVERTRES);
+        ReleaseDC(NULL, hdc);
+    }
+
     hInst = hInstance; // 将实例句柄存储在全局变量中
-    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_CHILD | WS_POPUP | WS_EX_TOOLWINDOW, 0, 0, cw, ch, nullptr, nullptr, hInstance, nullptr);
     if (!hWnd) {
         MessageBeep(MB_ICONERROR);
         return FALSE;
     }
+    hWndMain = hWnd;
 
     // 初始化GDI+
     ::GdiplusStartupInput GpInput;
@@ -77,16 +90,33 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 }
 
 void openEye(float alpha, bool running) {
-    OutputDebugString(L"openEye\n");
+    if (running) {
+        AP1.Copy_(EYE_AP1.Sub_(EYE_AP1_TO).Scale_(alpha).Add_(EYE_AP1_TO));
+        AP2.Copy_(EYE_AP2.Sub_(EYE_AP2_TO).Scale_(alpha).Add_(EYE_AP2_TO));
+        BP1.Copy_(EYE_BP1.Sub_(EYE_BP1_TO).Scale_(alpha).Add_(EYE_BP1_TO));
+        BP2.Copy_(EYE_BP2.Sub_(EYE_BP2_TO).Scale_(alpha).Add_(EYE_BP2_TO));
+        if (alpha == 1.0f) {
+            isKernel = TRUE;
+        }
+    }
+    
 }
 
 void closeEye(float alpha, bool running) {
-    OutputDebugString(L"closeEye\n");
+    if (running) {
+        AP1.Copy_(EYE_AP1_TO.Sub_(EYE_AP1).Scale_(alpha).Add_(EYE_AP1));
+        AP2.Copy_(EYE_AP2_TO.Sub_(EYE_AP2).Scale_(alpha).Add_(EYE_AP2));
+        BP1.Copy_(EYE_BP1_TO.Sub_(EYE_BP1).Scale_(alpha).Add_(EYE_BP1));
+        BP2.Copy_(EYE_BP2_TO.Sub_(EYE_BP2).Scale_(alpha).Add_(EYE_BP2));
+        if (alpha == 1.0f) {
+            isKernel = FALSE;
+        }
+    }
 }
 
 void lastSchedule(float alpha, bool running) {
-    if (!running) {
-        schedule.start();
+    if (running && 1.0f == alpha) {
+        KillTimer(hWndMain, TIMERID_REDRAW);
     }
 }
 
@@ -103,25 +133,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     }
     break;
     case WM_CREATE:
-        /*
         if (!applyDesktop(hWnd)) {
             MessageBox(hWnd, L"设置壁纸窗口失败！", L"错误", MB_OK | MB_ICONERROR);
             DestroyWindow(hWnd);
-        }*/
-        SetTimer(hWnd, TIMERID_REDRAW, 17, NULL);
-        {
+        } else {
+            SetTimer(hWnd, TIMERID_HEARTBEAT, 5000, NULL);
             schedule.addTrack(0, 30, closeEye);
             schedule.addTrack(100, 130, openEye);
             schedule.addTrack(200, 230, closeEye);
             schedule.addTrack(230, 260, openEye);
-            schedule.addTrack(3000, 3000, lastSchedule);
-            schedule.start();
+            schedule.addTrack(300, 300, lastSchedule);
         }
         break;
     case WM_TIMER:
     {
         int eventId = LOWORD(wParam);
-        if (eventId == TIMERID_REDRAW) {
+        if (eventId == TIMERID_HEARTBEAT) {
+            int p = std::rand() % 100 + 1;
+            if (p <= 35) {   // 以35的概率执行动画
+                if (schedule.start()) {
+                    SetTimer(hWnd, TIMERID_REDRAW, 17, NULL);
+                }
+            }
+        }else if (eventId == TIMERID_REDRAW) {
             schedule.update();
             HDC hdc = GetDC(hWnd);
             OnPaint(hWnd, hdc);
@@ -135,6 +169,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         HDC hdc = BeginPaint(hWnd, &ps);
         OnPaint(hWnd, hdc);
         EndPaint(hWnd, &ps);
+    }
+    break;
+    case WM_DISPLAYCHANGE:
+    {
+        int width = lParam & 0xFFFF;
+        int height = lParam >> 16;
+        MoveWindow(hWnd, 0, 0, width, height, TRUE);
     }
     break;
     case WM_DESTROY:
@@ -236,17 +277,18 @@ void OnPaint(_In_ HWND hWnd, _In_ HDC hdc) {
     rightPath.AddBezier(point13, point14, point15, point16);
     graphics.FillPath(&frontBrush, &rightPath);
 
-    float kernalRadius = 0.05f * scale;
+    if (isKernel) {
+        float kernalRadius = 0.05f * scale;
 
-    Vector2 kernalLeft;
-    EYE_KERNEL.Scale(scale, &kernalLeft);
-    kernalLeft.Add_(offsetLeft);
-    ::SolidBrush kernelBrush(kernelColor);
-    graphics.FillEllipse(&kernelBrush, kernalLeft.GetX() - kernalRadius, kernalLeft.GetY() - kernalRadius, kernalRadius * 2, kernalRadius * 2);
- 
-    Vector2 kernalRight(lap3.GetX() - kernalLeft.GetX() + rap0.GetX(), kernalLeft.GetY());
-    graphics.FillEllipse(&kernelBrush, kernalRight.GetX() - kernalRadius, kernalRight.GetY() - kernalRadius, kernalRadius * 2, kernalRadius * 2);
+        Vector2 kernalLeft;
+        EYE_KERNEL.Scale(scale, &kernalLeft);
+        kernalLeft.Add_(offsetLeft);
+        ::SolidBrush kernelBrush(kernelColor);
+        graphics.FillEllipse(&kernelBrush, kernalLeft.GetX() - kernalRadius, kernalLeft.GetY() - kernalRadius, kernalRadius * 2, kernalRadius * 2);
 
+        Vector2 kernalRight(lap3.GetX() - kernalLeft.GetX() + rap0.GetX(), kernalLeft.GetY());
+        graphics.FillEllipse(&kernelBrush, kernalRight.GetX() - kernalRadius, kernalRight.GetY() - kernalRadius, kernalRadius * 2, kernalRadius * 2);
+    }
     BitBlt(hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, hMemDC, 0, 0, SRCCOPY);
     DeleteDC(hMemDC);
     DeleteObject(hBitmap);

@@ -8,28 +8,32 @@ AnimationSchedule::AnimationSchedule(long duration) {
 	mTrackCount = 0;
 }
 
-void AnimationSchedule::start() {
+bool AnimationSchedule::start() {
 	if (!mRunning) {
 		mStartTime = system_clock::now();
 		mRunning = true;
+		return true;
 	}
+	return false;
 }
 
-void AnimationSchedule::stop() {
+bool AnimationSchedule::stop() {
 	if (mRunning) {
 		mRunning = false;
 		for (int i = 0; i < mTrackCount; i++) {
 			mTrack[i]->callback(0.0f, mRunning);
 			mTrack[i]->finished = false;
 		}
+		return true;
 	}
+	return false;
 }
 
 void AnimationSchedule::addTrack(long start, long end, AnimationCallback callback) {
 	mTrack[mTrackCount++] = new ANIMATION_TRACK{ start, end, false, callback };
 }
 
-void AnimationSchedule::update() {
+bool AnimationSchedule::update() {
 	if (mRunning) {
 		auto endTime = system_clock::now();
 		auto duration = duration_cast<milliseconds>(endTime - mStartTime);
@@ -51,7 +55,9 @@ void AnimationSchedule::update() {
 		if (t == mDuration) {
 			stop();
 		}
+		return true;
 	}
+	return false;
 }
 
 AnimationSchedule::~AnimationSchedule() {

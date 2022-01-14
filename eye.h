@@ -36,10 +36,10 @@ class AnimationSchedule {
 public:
 	AnimationSchedule(long duration);
 	~AnimationSchedule();
-	void start();
-	void stop();
+	bool start();
+	bool stop();
 	void addTrack(long start, long end, AnimationCallback callback);
-	void update();
+	bool update();
 
 private:
 	long mDuration;
