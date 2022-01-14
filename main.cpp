@@ -173,8 +173,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     break;
     case WM_DISPLAYCHANGE:
     {
-        int width = lParam & 0xFFFF;
-        int height = lParam >> 16;
+        int p = int(lParam);
+        int width = p & 0xFFFF;
+        int height = p >> 16;
         MoveWindow(hWnd, 0, 0, width, height, TRUE);
     }
     break;
