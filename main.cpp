@@ -1,6 +1,6 @@
 #include "global.h"
 #include "resource.h"
-#include "explorer.h"
+#include "desktop.h"
 #include "vector2.h"
 #include "eye.h"
 #include <gdiplus.h>
@@ -133,11 +133,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     }
     break;
     case WM_CREATE:
-        if (!applyDesktop(hWnd)) {
+        if (!SetBackground(hWnd)) {
             MessageBox(hWnd, L"…Ë÷√±⁄÷Ω¥∞ø⁄ ß∞‹£°", L"¥ÌŒÛ", MB_OK | MB_ICONERROR);
             DestroyWindow(hWnd);
         } else {
-            SetTimer(hWnd, TIMERID_HEARTBEAT, 5000, NULL);
+            SetTimer(hWnd, TIMERID_HEARTBEAT, 3000, NULL);
             schedule.addTrack(0, 30, closeEye);
             schedule.addTrack(100, 130, openEye);
             schedule.addTrack(200, 230, closeEye);
@@ -183,7 +183,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         PostQuitMessage(0);
         break;
     case WM_CLOSE:
-        regainDesktop(hWnd);
+        ShowWindow(hWnd, SW_HIDE);
+        SetParent(hWnd, NULL);
+        RefreshBackground();
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }

@@ -1,4 +1,4 @@
-#include "explorer.h"
+#include "desktop.h"
 #include <Psapi.h>
 #include <string>
 #include <algorithm>
@@ -20,7 +20,7 @@ BOOL belongToExplorer(_In_ HWND hWnd) {
                 wstring fileFullNameString(fileFullName);
                 string::size_type spInd = fileFullNameString.find_last_of('\\', fileFullNameString.length());
                 if (string::npos != spInd) {
-                    wstring fileNameString = fileFullNameString.substr(((int)spInd) + 1, fileFullNameString.length());
+                    wstring fileNameString = fileFullNameString.substr(spInd + 1, fileFullNameString.length());
                     transform(fileNameString.begin(), fileNameString.end(), fileNameString.begin(), ::tolower);
                     if (fileNameString == L"explorer.exe") {
                         return TRUE;
@@ -74,28 +74,32 @@ HWND findWorkerW() {
     return wi.hWnd;
 }
 
-BOOL regainDesktop(_In_ HWND hWnd) {
-    // TODO 尚未研究出来如何恢复explorer到未发送0x52C事件之前的状态。
-    HWND hWorkerw = findWorkerW();
-    if (NULL == hWorkerw) {
-        return FALSE;
-    }
-    // SetParent(hWnd, NULL);      // 设置父窗口
-    ShowWindow(hWorkerw, SW_SHOW);  // 显示窗口
-    return TRUE;
-}
-
-BOOL applyDesktop(_In_ HWND hWnd) {
+BOOL SetBackground(_In_ HWND hWnd) {
     HWND hProgman = findProgman();
     if (NULL == hProgman) {
         return FALSE;
     }
-    SendMessageTimeout(hProgman, 0x52C, 0, 0, 0, 100, 0);	// 给它发特殊消息
+    DWORD_PTR result = NULL;
+    SendMessageTimeout(hProgman, 0x52C, 0, 0, SMTO_NORMAL, 2000, &result);	// 给它发特殊消息
     HWND hWorkerw = findWorkerW();
     if (NULL == hWorkerw) {
         return FALSE;
     }
-    SetParent(hWnd, hProgman);      // 设置父窗口
-    ShowWindow(hWorkerw, SW_HIDE);  // 隐藏窗口
-	return TRUE;
+    // 看了其他壁纸引擎，它们都是将窗口放在hWorkerw窗口下。
+    SetParent(hWnd, hWorkerw);      // 设置父窗口
+    return TRUE;
+}
+
+#define WM_SETWALLPAPER WM_USER + 300    // https://blog.csdn.net/weixin_43820461/article/details/111054558
+BOOL RefreshBackground() {
+    HWND hWndShell = GetShellWindow();
+    if (NULL == hWndShell) {
+        return FALSE;
+    }
+    // wParam	未知，似乎可以指定任意值，系统使用0x0D
+    // lParam	指定窗口是否重绘
+    // PostMessage(GetShellWindow(), WM_SETWALLPAPER, 0x0D, TRUE);
+    DWORD_PTR result = NULL;
+    SendMessageTimeout(hWndShell, WM_SETWALLPAPER, 0x0D, TRUE, SMTO_NORMAL, 2000, &result);
+    return TRUE;
 }

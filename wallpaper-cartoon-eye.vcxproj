@@ -146,12 +146,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="explorer.cpp" />
+    <ClCompile Include="desktop.cpp" />
     <ClCompile Include="eye.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="explorer.h" />
+    <ClInclude Include="desktop.h" />
     <ClInclude Include="eye.h" />
     <ClInclude Include="vector2.h" />
     <ClInclude Include="global.h" />

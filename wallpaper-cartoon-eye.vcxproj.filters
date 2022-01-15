@@ -18,7 +18,7 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="explorer.cpp">
+    <ClCompile Include="desktop.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="eye.cpp">
@@ -32,13 +32,13 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="explorer.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="vector2.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="eye.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="desktop.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
