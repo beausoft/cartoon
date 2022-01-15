@@ -19,6 +19,11 @@ Vector2 BP1(EYE_BP1);
 Vector2 BP2(EYE_BP2);
 BOOL isKernel = TRUE;
 HWND hWndMain = NULL;
+// 通知托盘
+#define WM_TRAY_NOTIFY WM_USER + 1000
+#define IDM_EXIT 1005
+NOTIFYICONDATA trayNotify;
+HMENU hMenuTrayNotify;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow) {
     UNREFERENCED_PARAMETER(hPrevInstance);
@@ -26,6 +31,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_WINDOWSPROJECT, szWindowClass, MAX_LOADSTRING);
+
+    HANDLE hMutex = CreateMutex(NULL, TRUE, L"WallpaperCartoonEyeMutex");
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        // https://www.cnblogs.com/duguxue/p/5231371.html
+        if (hMutex != NULL) {
+            CloseHandle(hMutex); //互斥量存在释放句柄并复位互斥量
+        }
+        return FALSE;
+    }
 
     WNDCLASSEXW wcex;
     wcex.cbSize = sizeof(WNDCLASSEX);
@@ -126,9 +140,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     {
         int wmId = LOWORD(wParam);
         switch (wmId) {
-        case 0: // 防止警告
+        case IDM_EXIT:
+            PostMessage(hWnd, WM_CLOSE, NULL, NULL);
+            break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
+        }
+    }
+    break;
+    case WM_TRAY_NOTIFY:
+    {
+        UINT uID = (UINT)wParam;
+        UINT uMouseMsg = (UINT)lParam;
+        if (uID == IDI_APP && uMouseMsg == WM_RBUTTONDOWN) {
+            POINT pt;
+            GetCursorPos(&pt);
+            SetForegroundWindow(hWnd);   // 解决在菜单外单击左键菜单不消失的问题  https://www.iteye.com/blog/cwqcwk1-2289166
+            TrackPopupMenu(hMenuTrayNotify, TPM_RIGHTBUTTON, pt.x, pt.y, NULL, hWnd, NULL);
         }
     }
     break;
@@ -143,6 +171,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             schedule.addTrack(200, 230, closeEye);
             schedule.addTrack(230, 260, openEye);
             schedule.addTrack(300, 300, lastSchedule);
+            // 初始化图片菜单
+            hMenuTrayNotify = CreatePopupMenu();
+            AppendMenu(hMenuTrayNotify, MF_STRING, IDM_EXIT, L"Exit(&Q)");
+            // 初始化托盘
+            trayNotify.cbSize = (DWORD)sizeof(NOTIFYICONDATA);
+            trayNotify.hWnd = hWnd;
+            trayNotify.uID = IDI_APP;   // 此ID随便设置
+            trayNotify.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_INFO;
+            trayNotify.uCallbackMessage = WM_TRAY_NOTIFY;  // 响应消息
+            trayNotify.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_APP));
+            wcscpy_s(trayNotify.szTip, L"Wallpaper Cartoon EYE!");
+            wcscpy_s(trayNotify.szInfoTitle, L"Wallpaper Cartoon EYE");
+            wcscpy_s(trayNotify.szInfo, L"Wallpaper Cartoon eye Running!");
+            Shell_NotifyIcon(NIM_ADD, &trayNotify);//在托盘区添加图标
         }
         break;
     case WM_TIMER:
@@ -173,9 +215,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     break;
     case WM_DISPLAYCHANGE:
     {
-        int p = int(lParam);
-        int width = p & 0xFFFF;
-        int height = p >> 16;
+        // int p = int(lParam);
+        int width = LOWORD(lParam);    // p & 0xFFFF;
+        int height = HIWORD(lParam);   // >> 16;
         MoveWindow(hWnd, 0, 0, width, height, TRUE);
     }
     break;
@@ -186,6 +228,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         ShowWindow(hWnd, SW_HIDE);
         SetParent(hWnd, NULL);
         RefreshBackground();
+        // 在托盘中删除图标
+        Shell_NotifyIcon(NIM_DELETE, &trayNotify);
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
