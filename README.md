@@ -1,3 +1,5 @@
-# 桌面眼睛动画
+# Wallpaper cartoon eye
 
-使用Win32编程实现。
+This code is based on Win32 API implementation.
+
+![exhibition.gif](exhibition.gif)
