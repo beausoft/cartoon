@@ -230,7 +230,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     case WM_CLOSE:
         ShowWindow(hWnd, SW_HIDE);
         SetParent(hWnd, NULL);
-        SetBackground(NULL);
         RefreshBackground();
         // ‘⁄Õ–≈Ã÷–…æ≥˝Õº±Í
         Shell_NotifyIcon(NIM_DELETE, &trayNotify);
