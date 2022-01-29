@@ -103,3 +103,38 @@ BOOL RefreshBackground() {
     SendMessageTimeout(hWndShell, WM_SETWALLPAPER, 0x0D, TRUE, SMTO_NORMAL, 2000, &result);
     return TRUE;
 }
+
+/*
+检测是否有程序处于全屏状态了，灵感来自QQ的繁忙模式切换！
+*/
+BOOL TestFullScreen() {
+    HWND hWndForegroundWindow = GetForegroundWindow();   // 获取前置窗口
+    if (hWndForegroundWindow) {
+        DWORD dwPid;
+        GetWindowThreadProcessId(hWndForegroundWindow, &dwPid);
+        if (dwPid == GetCurrentProcessId()) {
+            // 如果是当前进程的窗口则直接返回
+            return FALSE;
+        }
+        if (belongToExplorer(hWndForegroundWindow)) {
+            // 如果是explorer则直接返回
+            return FALSE;
+        }
+        RECT foregroundWindowRect;
+        if (GetWindowRect(hWndForegroundWindow, &foregroundWindowRect)) {
+            // 获取但不包括任务栏的屏幕尺寸
+            int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+            int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+            // 计算屏幕面积和前置窗口面积
+            int screenAcreage = screenWidth * screenHeight;
+            int foregroundAcreage = (foregroundWindowRect.right - foregroundWindowRect.left) * (foregroundWindowRect.bottom - foregroundWindowRect.top);
+
+            float scale = float(foregroundAcreage) / float(screenAcreage);
+            // 当前置窗口的占有率大于95%时判定为全屏
+            if (scale > 0.95f) {
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
+}

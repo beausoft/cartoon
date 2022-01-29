@@ -191,10 +191,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     {
         int eventId = LOWORD(wParam);
         if (eventId == TIMERID_HEARTBEAT) {
-            int p = std::rand() % 100 + 1;
-            if (p <= 35) {   // 以35的概率执行动画
-                if (schedule.start()) {
-                    SetTimer(hWnd, TIMERID_REDRAW, 17, NULL);
+            // 只有当非全屏状态下才触发动画效果
+            if (!TestFullScreen()) {
+                int p = std::rand() % 100 + 1;
+                if (p <= 35) {   // 以35的概率执行动画
+                    if (schedule.start()) {
+                        SetTimer(hWnd, TIMERID_REDRAW, 17, NULL);
+                    }
                 }
             }
         }else if (eventId == TIMERID_REDRAW) {

@@ -3,3 +3,4 @@
 
 BOOL SetBackground(_In_ HWND hWnd);
 BOOL RefreshBackground();
+BOOL TestFullScreen();
